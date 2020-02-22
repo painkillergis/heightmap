@@ -1,0 +1,7 @@
+node_modules/
+*.zip
+*.img
+*.aux.xml
+chunks.d
+.idea
+*.pyc
