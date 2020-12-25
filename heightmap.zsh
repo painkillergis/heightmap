@@ -126,16 +126,20 @@ parser.add_argument('destination')
 args = parser.parse_args()
 
 translate = gdal.Open(args.source)
-dpi = args.dpi
-widthInches = args.widthInches
-heightInches = args.heightInches
-widthPixels = translate.RasterXSize
-heightPixels = translate.RasterYSize
-marginLeft=(dpi * widthInches - widthPixels) / 2
-marginTop=(dpi * heightInches - heightPixels) / 2
+innerWidthPixels = translate.RasterXSize
+innerHeightPixels = translate.RasterYSize
+
+widthPixels = args.dpi * args.widthInches
+heightPixels = args.dpi * args.heightInches
+
+marginLeft=int((widthPixels - innerWidthPixels) / 2)
+marginRight=int(widthPixels - innerWidthPixels - marginLeft)
+marginTop=int((heightPixels - innerHeightPixels) / 2)
+marginBottom=int(heightPixels - innerHeightPixels - marginTop)
+
 heightmapArray = np.pad(
   translate.ReadAsArray(),
-  [(int(marginTop),), (int(marginLeft),)],
+  [(marginTop, marginBottom), (marginLeft, marginRight)],
   mode='constant',
   constant_values=0,
 )
