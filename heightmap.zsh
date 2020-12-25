@@ -35,8 +35,28 @@ gdal.Warp(
 )
 EOF
 
-widthMeters=2742.0
-heightMeters=3130.0
+sizeMeters=`python - \
+  raster.d/heightmap.project.tif \
+  << EOF
+import gdal, json
+from argparse import ArgumentParser
+
+parser = ArgumentParser()
+parser.add_argument('source')
+args = parser.parse_args()
+
+dataSource = gdal.Open(args.source)
+i0, xResolution, i1, i2, i3, yResolution = dataSource.GetGeoTransform()
+widthPixels = dataSource.RasterXSize
+heightPixels = dataSource.RasterYSize
+
+print(json.dumps({
+  'widthMeters': widthPixels * xResolution,
+  'heightMeters': heightPixels * -yResolution,
+}))
+EOF`
+widthMeters=`echo $sizeMeters | jq .widthMeters -r`
+heightMeters=`echo $sizeMeters | jq .heightMeters -r`
 
 if [ "`echo "$widthMeters\n$heightMeters" | sort -g | head -1`" = "$widthMeters" ] ; then
   widthPixels=$((dpi*widthInchesLessMargin))
