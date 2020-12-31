@@ -69,10 +69,12 @@ EOF`
 width=`echo $size | jq .width -r`
 height=`echo $size | jq .height -r`
 
-echo projecting and cutting
+echo warping
 python - \
   $cutline \
   EPSG:6502 \
+  ${width%.*} \
+  ${height%.*} \
   $dem \
   raster.d/heightmap.project.tif \
   << EOF
@@ -82,6 +84,8 @@ from argparse import ArgumentParser
 parser = ArgumentParser()
 parser.add_argument('cutline')
 parser.add_argument('srid')
+parser.add_argument('width')
+parser.add_argument('height')
 parser.add_argument('source')
 parser.add_argument('destination')
 args = parser.parse_args()
@@ -100,34 +104,9 @@ gdal.Warp(
     dstSRS = args.srid,
     srcNodata = noDataValue,
     dstNodata = noDataValue,
-  ),
-)
-EOF
-
-echo warping
-python - \
-  ${width%.*} \
-  ${height%.*} \
-  raster.d/heightmap.project.tif \
-  raster.d/heightmap.warp.tif \
-  << EOF
-import gdal
-from argparse import ArgumentParser
-
-parser = ArgumentParser()
-parser.add_argument('nextWidthPixels', type = int)
-parser.add_argument('nextHeightPixels', type = int)
-parser.add_argument('source')
-parser.add_argument('destination')
-args = parser.parse_args()
-
-gdal.Warp(
-  args.destination,
-  args.source,
-  options = gdal.WarpOptions(
     resampleAlg = 'cubic',
-    width = args.nextWidthPixels,
-    height = args.nextHeightPixels,
+    width = args.width,
+    height = args.height,
   ),
 )
 EOF
