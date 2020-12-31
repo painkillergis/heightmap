@@ -24,6 +24,11 @@ parser.add_argument('source')
 parser.add_argument('destination')
 args = parser.parse_args()
 
+dataSource = gdal.Open(args.source)
+band = dataSource.GetRasterBand(1)
+noDataValue = band.GetNoDataValue()
+del dataSource
+
 gdal.Warp(
   args.destination,
   args.source,
@@ -31,6 +36,8 @@ gdal.Warp(
     cutlineDSName = args.cutline,
     cropToCutline = True,
     dstSRS = args.srid,
+    srcNodata = noDataValue,
+    dstNodata = noDataValue,
   ),
 )
 EOF
