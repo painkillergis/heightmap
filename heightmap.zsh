@@ -24,8 +24,42 @@ if [ -z "$dpi" ] ; then
   exit 1
 fi
 
+sizeMeters=`python - \
+  vector.d/cutline.shp \
+  << EOF
+import json, ogr
+from argparse import ArgumentParser
+
+parser = ArgumentParser()
+parser.add_argument('cutline')
+args = parser.parse_args()
+
+driver = ogr.GetDriverByName('ESRI Shapefile')
+dataSource = driver.Open(args.cutline)
+
+dataSource = ogr.Open(args.cutline)
+layer = dataSource.GetLayer()
+for feature in layer:
+  geometry = feature.GetGeometryRef()
+  (right, left, bottom, top) = geometry.GetEnvelope()
+  print(json.dumps({
+    'widthMeters': left - right,
+    'heightMeters': top - bottom,
+  }))
+EOF`
+
+widthMeters=`echo $sizeMeters | jq .widthMeters -r`
+heightMeters=`echo $sizeMeters | jq .heightMeters -r`
 widthInchesLessMargin=$((widthInches-marginInches*2.0))
 heightInchesLessMargin=$((heightInches-marginInches*2.0))
+
+if [ "`echo "$widthMeters\n$heightMeters" | sort -g | head -1`" = "$widthMeters" ] ; then
+  widthPixels=$((dpi*widthInchesLessMargin))
+  heightPixels=$((widthPixels*heightMeters/widthMeters))
+else
+  echo landscape orientation not implemented
+  exit 1
+fi
 
 echo projecting and cutting
 python - \
@@ -61,37 +95,6 @@ gdal.Warp(
   ),
 )
 EOF
-
-sizeMeters=`python - \
-  raster.d/heightmap.project.tif \
-  << EOF
-import gdal, json
-from argparse import ArgumentParser
-
-parser = ArgumentParser()
-parser.add_argument('source')
-args = parser.parse_args()
-
-dataSource = gdal.Open(args.source)
-i0, xResolution, i1, i2, i3, yResolution = dataSource.GetGeoTransform()
-widthPixels = dataSource.RasterXSize
-heightPixels = dataSource.RasterYSize
-
-print(json.dumps({
-  'widthMeters': widthPixels * xResolution,
-  'heightMeters': heightPixels * -yResolution,
-}))
-EOF`
-widthMeters=`echo $sizeMeters | jq .widthMeters -r`
-heightMeters=`echo $sizeMeters | jq .heightMeters -r`
-
-if [ "`echo "$widthMeters\n$heightMeters" | sort -g | head -1`" = "$widthMeters" ] ; then
-  widthPixels=$((dpi*widthInchesLessMargin))
-  heightPixels=$((widthPixels*heightMeters/widthMeters))
-else
-  echo landscape orientation not implemented
-  exit 1
-fi
 
 echo warping
 python - \
