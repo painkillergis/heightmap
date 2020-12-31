@@ -42,9 +42,6 @@ parser.add_argument('marginInches', type = float)
 parser.add_argument('dpi', type = int)
 args = parser.parse_args()
 
-driver = ogr.GetDriverByName('ESRI Shapefile')
-dataSource = driver.Open(args.cutline)
-
 dataSource = ogr.Open(args.cutline)
 layer = dataSource.GetLayer()
 for feature in layer:
