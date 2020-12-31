@@ -1,17 +1,37 @@
 #!/bin/zsh
-widthInches=8.0
-heightInches=10.0
-marginInches=0.5
-dpi=300
+if [ -z "$dem" ] ; then
+  echo dem is required
+  exit 1
+fi
+if [ -z "$cutline" ] ; then
+  echo cutline is required
+  exit 1
+fi
+if [ -z "$widthInches" ] ; then
+  echo widthInches is required
+  exit 1
+fi
+if [ -z "$heightInches" ] ; then
+  echo heightInches is required
+  exit 1
+fi
+if [ -z "$marginInches" ] ; then
+  echo marginInches is required
+  exit 1
+fi
+if [ -z "$dpi" ] ; then
+  echo dpi is required
+  exit 1
+fi
 
 widthInchesLessMargin=$((widthInches-marginInches*2.0))
 heightInchesLessMargin=$((heightInches-marginInches*2.0))
 
 echo projecting and cutting
 python - \
-  shp.d/cutline.geojson \
+  $cutline \
   EPSG:6502 \
-  raster.d/heightmap.vrt \
+  $dem \
   raster.d/heightmap.project.tif \
   << EOF
 import gdal
