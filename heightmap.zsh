@@ -54,8 +54,12 @@ for feature in layer:
   heightRealWorld = top - bottom
   widthInchesInner = args.widthInches - args.marginInches * 2.0
   heightInchesInner = args.heightInches - args.marginInches * 2.0
-  width = args.dpi * widthInchesInner
-  height = width * heightRealWorld / widthRealWorld
+  if widthRealWorld < heightRealWorld:
+    height = args.dpi * heightInchesInner
+    width = height * widthRealWorld / heightRealWorld
+  else:
+    width = args.dpi * widthInchesInner
+    height = width * heightRealWorld / widthRealWorld
   print(json.dumps({
     'width': width,
     'height': height,
