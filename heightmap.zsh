@@ -24,14 +24,22 @@ if [ -z "$dpi" ] ; then
   exit 1
 fi
 
-sizeMeters=`python - \
+size=`python - \
   vector.d/cutline.shp \
+  $widthInches \
+  $heightInches \
+  $marginInches \
+  $dpi \
   << EOF
 import json, ogr
 from argparse import ArgumentParser
 
 parser = ArgumentParser()
 parser.add_argument('cutline')
+parser.add_argument('widthInches', type = float)
+parser.add_argument('heightInches', type = float)
+parser.add_argument('marginInches', type = float)
+parser.add_argument('dpi', type = int)
 args = parser.parse_args()
 
 driver = ogr.GetDriverByName('ESRI Shapefile')
@@ -42,24 +50,20 @@ layer = dataSource.GetLayer()
 for feature in layer:
   geometry = feature.GetGeometryRef()
   (right, left, bottom, top) = geometry.GetEnvelope()
+  widthRealWorld = left - right
+  heightRealWorld = top - bottom
+  widthInchesInner = args.widthInches - args.marginInches * 2.0
+  heightInchesInner = args.heightInches - args.marginInches * 2.0
+  width = args.dpi * widthInchesInner
+  height = width * heightRealWorld / widthRealWorld
   print(json.dumps({
-    'widthMeters': left - right,
-    'heightMeters': top - bottom,
+    'width': width,
+    'height': height,
   }))
 EOF`
 
-widthMeters=`echo $sizeMeters | jq .widthMeters -r`
-heightMeters=`echo $sizeMeters | jq .heightMeters -r`
-widthInchesLessMargin=$((widthInches-marginInches*2.0))
-heightInchesLessMargin=$((heightInches-marginInches*2.0))
-
-if [ "`echo "$widthMeters\n$heightMeters" | sort -g | head -1`" = "$widthMeters" ] ; then
-  widthPixels=$((dpi*widthInchesLessMargin))
-  heightPixels=$((widthPixels*heightMeters/widthMeters))
-else
-  echo landscape orientation not implemented
-  exit 1
-fi
+width=`echo $size | jq .width -r`
+height=`echo $size | jq .height -r`
 
 echo projecting and cutting
 python - \
@@ -98,8 +102,8 @@ EOF
 
 echo warping
 python - \
-  ${widthPixels%.*} \
-  ${heightPixels%.*} \
+  ${width%.*} \
+  ${height%.*} \
   raster.d/heightmap.project.tif \
   raster.d/heightmap.warp.tif \
   << EOF
