@@ -21,7 +21,18 @@ def intersectDegreeGrid(source):
   gdal.Unlink(tmp)
 
   y_ind, x_ind = np.where(mask == 1)
-  return [{ "lat": int(90 - y), "lon": int(-180 + x) } for x, y in zip(x_ind, y_ind)]
+  upperLefts = [{ "lat": int(90 - y), "lon": int(-180 + x) } for x, y in zip(x_ind, y_ind)]
+  return list(map(upperLeftTo3DepId, upperLefts))
+
+def upperLeftTo3DepId(cell):
+  lat = cell.get('lat')
+  lon = cell.get('lon')
+  return ''.join([
+    'n' if lat >= 0 else 's',
+    f'{abs(lat):02}',
+    'e' if lon >= 0 else 'w',
+    f'{abs(lon):03}',
+  ])
 
 if __name__ == '__main__':
   from argparse import ArgumentParser
