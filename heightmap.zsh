@@ -1,28 +1,10 @@
 #!/bin/zsh
-if [ -z "$dem" ] ; then
-  echo dem is required
-  exit 1
-fi
-if [ -z "$cutline" ] ; then
-  echo cutline is required
-  exit 1
-fi
-if [ -z "$width" ] ; then
-  echo width is required
-  exit 1
-fi
-if [ -z "$height" ] ; then
-  echo height is required
-  exit 1
-fi
-if [ -z "$margin" ] ; then
-  echo margin is required
-  exit 1
-fi
-if [ -z "$srs" ] ; then
-  echo srs is required
-  exit 1
-fi
+if [ -z "$dem" ] ; then echo dem is required ; exit 1 ; fi
+if [ -z "$cutline" ] ; then echo cutline is required ; exit 1 ; fi
+if [ -z "$width" ] ; then echo width is required ; exit 1 ; fi
+if [ -z "$height" ] ; then echo height is required ; exit 1;  fi
+if [ -z "$margin" ] ; then echo margin is required ; exit 1 ; fi
+if [ -z "$srs" ] ; then echo srs is required ; exit 1 ; fi
 
 sourceSize=`python \
   ~/ws/painkiller/heightmap/vectorSize.py \
