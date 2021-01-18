@@ -24,47 +24,17 @@ if [ -z "$dpi" ] ; then
   exit 1
 fi
 
-size=`python - \
-  vector.d/cutline.shp \
-  $widthInches \
-  $heightInches \
-  $marginInches \
-  $dpi \
-  << EOF
-import json, ogr
-from argparse import ArgumentParser
+sourceSize=`python \
+  ~/ws/painkiller/heightmap/vectorSize.py \
+  $cutline`
+sourceWidth=`echo $sourceSize | jq .width -r`
+sourceHeight=`echo $sourceSize | jq .height -r`
 
-parser = ArgumentParser()
-parser.add_argument('cutline')
-parser.add_argument('widthInches', type = float)
-parser.add_argument('heightInches', type = float)
-parser.add_argument('marginInches', type = float)
-parser.add_argument('dpi', type = int)
-args = parser.parse_args()
+inset=`jq -n "{width:$((widthInches*dpi)),height:$((heightInches*dpi)),margin:$((marginInches*dpi)),sourceWidth:$sourceWidth,sourceHeight:$sourceHeight}"`
 
-dataSource = ogr.Open(args.cutline)
-layer = dataSource.GetLayer()
-for feature in layer:
-  geometry = feature.GetGeometryRef()
-  (right, left, bottom, top) = geometry.GetEnvelope()
-  widthRealWorld = left - right
-  heightRealWorld = top - bottom
-  widthInchesInner = args.widthInches - args.marginInches * 2.0
-  heightInchesInner = args.heightInches - args.marginInches * 2.0
-  if widthRealWorld < heightRealWorld:
-    height = args.dpi * heightInchesInner
-    width = height * widthRealWorld / heightRealWorld
-  else:
-    width = args.dpi * widthInchesInner
-    height = width * heightRealWorld / widthRealWorld
-  print(json.dumps({
-    'width': width,
-    'height': height,
-  }))
-EOF`
-
-width=`echo $size | jq .width -r`
-height=`echo $size | jq .height -r`
+size=`curl -sXPOST painkiller.arctair.com/layouts/inset -H "Content-Type: application/json" -d "$inset"`
+width=`echo $size | jq .innerWidth -r`
+height=`echo $size | jq .innerHeight -r`
 
 echo warping
 python - \
