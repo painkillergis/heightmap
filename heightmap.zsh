@@ -19,6 +19,10 @@ if [ -z "$margin" ] ; then
   echo margin is required
   exit 1
 fi
+if [ -z "$srs" ] ; then
+  echo srs is required
+  exit 1
+fi
 
 sourceSize=`python \
   ~/ws/painkiller/heightmap/vectorSize.py \
@@ -37,7 +41,7 @@ marginTop=`echo $size | jq .marginTop -r`
 echo warping
 python - \
   $cutline \
-  EPSG:6502 \
+  $srs \
   $innerWidth \
   $innerHeight \
   $dem \
