@@ -123,15 +123,15 @@ args = parser.parse_args()
 
 dataSource = gdal.Open(args.source)
 band = dataSource.GetRasterBand(1)
-band.ComputeStatistics(0)
+minimum, maximum = band.ComputeStatistics(0)[0:2]
 
 gdal.Translate(
   args.destination,
   args.source,
   options = gdal.TranslateOptions(
     scaleParams = [[
-      band.GetMinimum(),
-      band.GetMaximum(),
+      minimum,
+      maximum,
       8192,
       65534,
     ]],
