@@ -114,9 +114,6 @@ EOF
 
 echo padding
 python - \
-  $dpi \
-  $widthInches \
-  $heightInches \
   $marginLeft \
   $marginTop \
   raster.d/heightmap.translate.tif \
@@ -126,9 +123,6 @@ import gdal, np
 from argparse import ArgumentParser
 
 parser = ArgumentParser()
-parser.add_argument('dpi', type = int)
-parser.add_argument('widthInches', type = float)
-parser.add_argument('heightInches', type = float)
 parser.add_argument('marginLeft', type = int)
 parser.add_argument('marginTop', type = int)
 parser.add_argument('source')
