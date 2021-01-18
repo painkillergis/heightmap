@@ -30,7 +30,11 @@ sourceSize=`python \
 sourceWidth=`echo $sourceSize | jq .width -r`
 sourceHeight=`echo $sourceSize | jq .height -r`
 
-inset=`jq -n "{width:$((widthInches*dpi)),height:$((heightInches*dpi)),margin:$((marginInches*dpi)),sourceWidth:$sourceWidth,sourceHeight:$sourceHeight}"`
+width=$((widthInches*dpi))
+height=$((heightInches*dpi))
+margin=$((marginInches*dpi))
+
+inset=`jq -n "{width:$width,height:$height,margin:$margin,sourceWidth:$sourceWidth,sourceHeight:$sourceHeight}"`
 
 size=`curl -sXPOST painkiller.arctair.com/layouts/inset -H "Content-Type: application/json" -d "$inset"`
 innerWidth=`echo $size | jq .innerWidth -r`
