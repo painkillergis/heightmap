@@ -110,7 +110,7 @@ EOF
 
 echo translating
 python - \
-  raster.d/heightmap.warp.tif \
+  raster.d/heightmap.project.tif \
   raster.d/heightmap.translate.tif \
   << EOF
 import gdal, gdalconst
