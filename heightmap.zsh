@@ -7,20 +7,16 @@ if [ -z "$cutline" ] ; then
   echo cutline is required
   exit 1
 fi
-if [ -z "$widthInches" ] ; then
-  echo widthInches is required
+if [ -z "$width" ] ; then
+  echo width is required
   exit 1
 fi
-if [ -z "$heightInches" ] ; then
-  echo heightInches is required
+if [ -z "$height" ] ; then
+  echo height is required
   exit 1
 fi
-if [ -z "$marginInches" ] ; then
-  echo marginInches is required
-  exit 1
-fi
-if [ -z "$dpi" ] ; then
-  echo dpi is required
+if [ -z "$margin" ] ; then
+  echo margin is required
   exit 1
 fi
 
@@ -29,10 +25,6 @@ sourceSize=`python \
   $cutline`
 sourceWidth=`echo $sourceSize | jq .width -r`
 sourceHeight=`echo $sourceSize | jq .height -r`
-
-width=$((widthInches*dpi))
-height=$((heightInches*dpi))
-margin=$((marginInches*dpi))
 
 inset=`jq -n "{width:$width,height:$height,margin:$margin,sourceWidth:$sourceWidth,sourceHeight:$sourceHeight}"`
 
