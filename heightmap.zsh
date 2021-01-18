@@ -35,6 +35,8 @@ inset=`jq -n "{width:$((widthInches*dpi)),height:$((heightInches*dpi)),margin:$(
 size=`curl -sXPOST painkiller.arctair.com/layouts/inset -H "Content-Type: application/json" -d "$inset"`
 width=`echo $size | jq .innerWidth -r`
 height=`echo $size | jq .innerHeight -r`
+marginLeft=`echo $size | jq .marginLeft -r`
+marginTop=`echo $size | jq .marginTop -r`
 
 echo warping
 python - \
@@ -115,6 +117,8 @@ python - \
   $dpi \
   $widthInches \
   $heightInches \
+  $marginLeft \
+  $marginTop \
   raster.d/heightmap.translate.tif \
   raster.d/heightmap.tif \
   << EOF
@@ -125,25 +129,16 @@ parser = ArgumentParser()
 parser.add_argument('dpi', type = int)
 parser.add_argument('widthInches', type = float)
 parser.add_argument('heightInches', type = float)
+parser.add_argument('marginLeft', type = int)
+parser.add_argument('marginTop', type = int)
 parser.add_argument('source')
 parser.add_argument('destination')
 args = parser.parse_args()
 
 translate = gdal.Open(args.source)
-innerWidthPixels = translate.RasterXSize
-innerHeightPixels = translate.RasterYSize
-
-widthPixels = args.dpi * args.widthInches
-heightPixels = args.dpi * args.heightInches
-
-marginLeft=int((widthPixels - innerWidthPixels) / 2)
-marginRight=int(widthPixels - innerWidthPixels - marginLeft)
-marginTop=int((heightPixels - innerHeightPixels) / 2)
-marginBottom=int(heightPixels - innerHeightPixels - marginTop)
-
 heightmapArray = np.pad(
   translate.ReadAsArray(),
-  [(marginTop, marginBottom), (marginLeft, marginRight)],
+  [(args.marginTop,), (args.marginLeft,)],
   mode='constant',
   constant_values=0,
 )
@@ -159,10 +154,10 @@ heightmap.GetRasterBand(1).WriteArray(heightmapArray)
 heightmap.GetRasterBand(1).SetNoDataValue(translate.GetRasterBand(1).GetNoDataValue())
 left, xResolution, i0, top, i1, yResolution = translate.GetGeoTransform()
 heightmap.SetGeoTransform([
-  left - xResolution * marginLeft,
+  left - xResolution * args.marginLeft,
   xResolution,
   i0,
-  top - yResolution * marginTop,
+  top - yResolution * args.marginTop,
   i1,
   yResolution,
 ])
