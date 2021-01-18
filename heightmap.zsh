@@ -42,8 +42,8 @@ echo warping
 python - \
   $cutline \
   EPSG:6502 \
-  ${width%.*} \
-  ${height%.*} \
+  $width \
+  $height \
   $dem \
   raster.d/heightmap.project.tif \
   << EOF
