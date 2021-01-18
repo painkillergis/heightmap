@@ -33,8 +33,8 @@ sourceHeight=`echo $sourceSize | jq .height -r`
 inset=`jq -n "{width:$((widthInches*dpi)),height:$((heightInches*dpi)),margin:$((marginInches*dpi)),sourceWidth:$sourceWidth,sourceHeight:$sourceHeight}"`
 
 size=`curl -sXPOST painkiller.arctair.com/layouts/inset -H "Content-Type: application/json" -d "$inset"`
-width=`echo $size | jq .innerWidth -r`
-height=`echo $size | jq .innerHeight -r`
+innerWidth=`echo $size | jq .innerWidth -r`
+innerHeight=`echo $size | jq .innerHeight -r`
 marginLeft=`echo $size | jq .marginLeft -r`
 marginTop=`echo $size | jq .marginTop -r`
 
@@ -42,8 +42,8 @@ echo warping
 python - \
   $cutline \
   EPSG:6502 \
-  $width \
-  $height \
+  $innerWidth \
+  $innerHeight \
   $dem \
   raster.d/heightmap.project.tif \
   << EOF
@@ -53,8 +53,8 @@ from argparse import ArgumentParser
 parser = ArgumentParser()
 parser.add_argument('cutline')
 parser.add_argument('srid')
-parser.add_argument('width')
-parser.add_argument('height')
+parser.add_argument('innerWidth')
+parser.add_argument('innerHeight')
 parser.add_argument('source')
 parser.add_argument('destination')
 args = parser.parse_args()
@@ -74,8 +74,8 @@ gdal.Warp(
     srcNodata = noDataValue,
     dstNodata = noDataValue,
     resampleAlg = 'cubic',
-    width = args.width,
-    height = args.height,
+    width = args.innerWidth,
+    height = args.innerHeight,
   ),
 )
 EOF
