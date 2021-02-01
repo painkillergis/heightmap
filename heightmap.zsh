@@ -12,13 +12,15 @@ sourceSize=`python \
 sourceWidth=`echo $sourceSize | jq .width -r`
 sourceHeight=`echo $sourceSize | jq .height -r`
 
-inset=`jq -n "{width:$width,height:$height,margin:$margin,sourceWidth:$sourceWidth,sourceHeight:$sourceHeight}"`
+printLayoutQuestion=`jq -n "{printOption:{width:$width,height:$height},margin:$margin,source:{width:$sourceWidth,height:$sourceHeight}}"`
 
-size=`curl -sXPOST painkiller.arctair.com/layouts/inset -H "Content-Type: application/json" -d "$inset"`
-innerWidth=`echo $size | jq .innerWidth -r`
-innerHeight=`echo $size | jq .innerHeight -r`
-marginLeft=`echo $size | jq .marginLeft -r`
-marginTop=`echo $size | jq .marginTop -r`
+echo $printLayoutQuestion
+size=`curl -svXPOST painkiller.arctair.com/layouts/print-layout -H "Content-Type: application/json" -d "$printLayoutQuestion"`
+echo $size
+innerWidth=`echo $size | jq .innerSize.width -r`
+innerHeight=`echo $size | jq .innerSize.height -r`
+marginLeft=`echo $size | jq .margin.width -r`
+marginTop=`echo $size | jq .margin.height -r`
 
 echo warping
 python - \
