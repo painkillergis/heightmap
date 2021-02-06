@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import json, np, requests, sys
 from osgeo import gdal, gdalconst, ogr
 from argparse import ArgumentParser
