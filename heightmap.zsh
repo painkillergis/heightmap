@@ -1,10 +1,44 @@
 #!/bin/zsh
-if [ -z "$dem" ] ; then echo dem is required ; exit 1 ; fi
-if [ -z "$cutline" ] ; then echo cutline is required ; exit 1 ; fi
-if [ -z "$width" ] ; then echo width is required ; exit 1 ; fi
-if [ -z "$height" ] ; then echo height is required ; exit 1;  fi
-if [ -z "$margin" ] ; then echo margin is required ; exit 1 ; fi
-if [ -z "$srs" ] ; then echo srs is required ; exit 1 ; fi
+args=`
+python - \
+  "$@" \
+  << EOF
+import json, sys
+from argparse import ArgumentParser
+
+parser = ArgumentParser()
+parser.add_argument('dem')
+parser.add_argument('cutline')
+parser.add_argument('width')
+parser.add_argument('height')
+parser.add_argument('margin')
+parser.add_argument('srs')
+args = parser.parse_args()
+
+json.dump(
+  {
+    "dem": args.dem,
+    "cutline": args.cutline,
+    "width": args.width,
+    "height": args.height,
+    "margin": args.margin,
+    "srs": args.srs,
+  },
+  sys.stdout,
+)
+EOF
+`
+
+if [[ "$?" != "0" ]] ; then
+  exit 1
+fi
+
+dem=`echo $args | jq .dem -r`
+cutline=`echo $args | jq .cutline -r`
+width=`echo $args | jq .width -r`
+height=`echo $args | jq .height -r`
+margin=`echo $args | jq .margin -r`
+srs=`echo $args | jq .srs -r`
 
 sourceSize=`python \
   ~/ws/painkillergis/heightmap/vectorSize.py \
