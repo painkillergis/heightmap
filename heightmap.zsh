@@ -16,48 +16,6 @@ innerHeight=`echo $args | jq .innerHeight -r`
 marginLeft=`echo $args | jq .marginLeft -r`
 marginTop=`echo $args | jq .marginTop -r`
 
-echo warping
-python - \
-  $cutline \
-  $srs \
-  $innerWidth \
-  $innerHeight \
-  $dem \
-  raster.d/heightmap.project.tif \
-  << EOF
-import gdal
-from argparse import ArgumentParser
-
-parser = ArgumentParser()
-parser.add_argument('cutline')
-parser.add_argument('srid')
-parser.add_argument('innerWidth')
-parser.add_argument('innerHeight')
-parser.add_argument('source')
-parser.add_argument('destination')
-args = parser.parse_args()
-
-dataSource = gdal.Open(args.source)
-band = dataSource.GetRasterBand(1)
-noDataValue = band.GetNoDataValue()
-del dataSource
-
-gdal.Warp(
-  args.destination,
-  args.source,
-  options = gdal.WarpOptions(
-    cutlineDSName = args.cutline,
-    cropToCutline = True,
-    dstSRS = args.srid,
-    srcNodata = noDataValue,
-    dstNodata = noDataValue,
-    resampleAlg = 'cubic',
-    width = args.innerWidth,
-    height = args.innerHeight,
-  ),
-)
-EOF
-
 echo translating
 python - \
   raster.d/heightmap.project.tif \

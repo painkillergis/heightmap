@@ -1,5 +1,5 @@
 import json, requests, sys
-from osgeo import ogr
+from osgeo import gdal, ogr
 from argparse import ArgumentParser
 
 parser = ArgumentParser()
@@ -42,6 +42,26 @@ printLayout = requests.post(
 ) \
   .json()
 
+dataSource = gdal.Open(args.dem)
+band = dataSource.GetRasterBand(1)
+noDataValue = band.GetNoDataValue()
+del dataSource
+
+gdal.Warp(
+  'raster.d/heightmap.project.tif',
+  args.dem,
+  options = gdal.WarpOptions(
+    cutlineDSName = args.cutline,
+    cropToCutline = True,
+    dstSRS = args.srs,
+    srcNodata = noDataValue,
+    dstNodata = noDataValue,
+    resampleAlg = 'cubic',
+    width = printLayout['innerSize']['width'],
+    height = printLayout['innerSize']['height'],
+  ),
+)
+
 json.dump(
   {
     "dem": args.dem,
@@ -50,8 +70,6 @@ json.dump(
     "height": args.height,
     "margin": args.margin,
     "srs": args.srs,
-    "innerWidth": printLayout['innerSize']['width'],
-    "innerHeight": printLayout['innerSize']['height'],
     "marginLeft": printLayout['margin']['width'],
     "marginTop": printLayout['margin']['height'],
   },
