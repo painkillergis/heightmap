@@ -12,11 +12,10 @@ sourceSize=`python \
 sourceWidth=`echo $sourceSize | jq .width -r`
 sourceHeight=`echo $sourceSize | jq .height -r`
 
-printLayoutQuestion=`jq -n "{printOption:{width:$width,height:$height},margin:$margin,source:{width:$sourceWidth,height:$sourceHeight}}"`
-
-echo $printLayoutQuestion
-size=`curl -svXPOST painkiller.arctair.com/layouts/print-layout -H "Content-Type: application/json" -d "$printLayoutQuestion"`
-echo $size
+size=`
+  jq -n "{printOption:{width:$width,height:$height},margin:$margin,source:{width:$sourceWidth,height:$sourceHeight}}" | \
+  curl -svXPOST painkiller.arctair.com/layouts/print-layout -H "Content-Type: application/json" -d @-
+`
 innerWidth=`echo $size | jq .innerSize.width -r`
 innerHeight=`echo $size | jq .innerSize.height -r`
 marginLeft=`echo $size | jq .margin.width -r`
