@@ -11,17 +11,10 @@ width=`echo $args | jq .width -r`
 height=`echo $args | jq .height -r`
 margin=`echo $args | jq .margin -r`
 srs=`echo $args | jq .srs -r`
-sourceWidth=`echo $args | jq .sourceWidth -r`
-sourceHeight=`echo $args | jq .sourceHeight -r`
-
-size=`
-  jq -n "{printOption:{width:$width,height:$height},margin:$margin,source:{width:$sourceWidth,height:$sourceHeight}}" | \
-  curl -svXPOST painkiller.arctair.com/layouts/print-layout -H "Content-Type: application/json" -d @-
-`
-innerWidth=`echo $size | jq .innerSize.width -r`
-innerHeight=`echo $size | jq .innerSize.height -r`
-marginLeft=`echo $size | jq .margin.width -r`
-marginTop=`echo $size | jq .margin.height -r`
+innerWidth=`echo $args | jq .innerWidth -r`
+innerHeight=`echo $args | jq .innerHeight -r`
+marginLeft=`echo $args | jq .marginLeft -r`
+marginTop=`echo $args | jq .marginTop -r`
 
 echo warping
 python - \

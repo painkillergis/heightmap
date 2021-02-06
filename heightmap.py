@@ -1,4 +1,5 @@
-import json, ogr, sys
+import json, requests, sys
+from osgeo import ogr
 from argparse import ArgumentParser
 
 parser = ArgumentParser()
@@ -25,6 +26,22 @@ envelopes = [
 
 (lefts, rights, bottoms, tops) = list(map(list, zip(*envelopes)))
 
+printLayout = requests.post(
+  'http://painkiller.arctair.com/layouts/print-layout',
+  json = {
+    "printOption": {
+      "width": args.width,
+      "height": args.height,
+    },
+    "source": {
+      "width": max(rights) - min(lefts),
+      "height": max(tops) - min(bottoms),
+    },
+    "margin": args.margin,
+  },
+) \
+  .json()
+
 json.dump(
   {
     "dem": args.dem,
@@ -33,8 +50,10 @@ json.dump(
     "height": args.height,
     "margin": args.margin,
     "srs": args.srs,
-    "sourceWidth": max(rights) - min(lefts),
-    "sourceHeight": max(tops) - min(bottoms),
+    "innerWidth": printLayout['innerSize']['width'],
+    "innerHeight": printLayout['innerSize']['height'],
+    "marginLeft": printLayout['margin']['width'],
+    "marginTop": printLayout['margin']['height'],
   },
   sys.stdout,
 )
