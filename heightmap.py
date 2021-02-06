@@ -1,5 +1,5 @@
 import json, requests, sys
-from osgeo import gdal, ogr
+from osgeo import gdal, gdalconst, ogr
 from argparse import ArgumentParser
 
 parser = ArgumentParser()
@@ -59,6 +59,24 @@ gdal.Warp(
     resampleAlg = 'cubic',
     width = printLayout['innerSize']['width'],
     height = printLayout['innerSize']['height'],
+  ),
+)
+
+projectDataSource = gdal.Open('raster.d/heightmap.project.tif')
+band = projectDataSource.GetRasterBand(1)
+minimum, maximum = band.ComputeStatistics(0)[0:2]
+
+gdal.Translate(
+  'raster.d/heightmap.translate.tif',
+  'raster.d/heightmap.project.tif',
+  options = gdal.TranslateOptions(
+    scaleParams = [[
+      minimum,
+      maximum,
+      8192,
+      65534,
+    ]],
+    outputType = gdalconst.GDT_UInt16,
   ),
 )
 
