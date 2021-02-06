@@ -3,7 +3,7 @@ args=`
 python - \
   "$@" \
   << EOF
-import json, sys
+import json, ogr, sys
 from argparse import ArgumentParser
 
 parser = ArgumentParser()
@@ -15,6 +15,21 @@ parser.add_argument('margin')
 parser.add_argument('srs')
 args = parser.parse_args()
 
+cutlineDataSource = ogr.Open(args.cutline)
+
+layers = [
+  cutlineDataSource.GetLayerByIndex(index)
+  for index in range(0, cutlineDataSource.GetLayerCount())
+]
+
+envelopes = [
+  feature.GetGeometryRef().GetEnvelope()
+  for layer in layers
+  for feature in layer
+]
+
+(lefts, rights, bottoms, tops) = list(map(list, zip(*envelopes)))
+
 json.dump(
   {
     "dem": args.dem,
@@ -23,6 +38,8 @@ json.dump(
     "height": args.height,
     "margin": args.margin,
     "srs": args.srs,
+    "sourceWidth": max(rights) - min(lefts),
+    "sourceHeight": max(tops) - min(bottoms),
   },
   sys.stdout,
 )
@@ -39,12 +56,8 @@ width=`echo $args | jq .width -r`
 height=`echo $args | jq .height -r`
 margin=`echo $args | jq .margin -r`
 srs=`echo $args | jq .srs -r`
-
-sourceSize=`python \
-  ~/ws/painkillergis/heightmap/vectorSize.py \
-  $cutline`
-sourceWidth=`echo $sourceSize | jq .width -r`
-sourceHeight=`echo $sourceSize | jq .height -r`
+sourceWidth=`echo $args | jq .sourceWidth -r`
+sourceHeight=`echo $args | jq .sourceHeight -r`
 
 size=`
   jq -n "{printOption:{width:$width,height:$height},margin:$margin,source:{width:$sourceWidth,height:$sourceHeight}}" | \
