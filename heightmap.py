@@ -1,4 +1,4 @@
-import json, requests, sys
+import json, np, requests, sys
 from osgeo import gdal, gdalconst, ogr
 from argparse import ArgumentParser
 
@@ -80,16 +80,30 @@ gdal.Translate(
   ),
 )
 
-json.dump(
-  {
-    "dem": args.dem,
-    "cutline": args.cutline,
-    "width": args.width,
-    "height": args.height,
-    "margin": args.margin,
-    "srs": args.srs,
-    "marginLeft": printLayout['margin']['width'],
-    "marginTop": printLayout['margin']['height'],
-  },
-  sys.stdout,
+translate = gdal.Open('raster.d/heightmap.translate.tif')
+heightmapArray = np.pad(
+  translate.ReadAsArray(),
+  [(printLayout['margin']['height'],), (printLayout['margin']['width'],)],
+  mode='constant',
+  constant_values=0,
 )
+arrayHeight, arrayWidth = np.shape(heightmapArray)
+heightmap = gdal.GetDriverByName('GTiff').Create(
+  'raster.d/heightmap.tif',
+  arrayWidth,
+  arrayHeight,
+  1,
+  translate.GetRasterBand(1).DataType,
+)
+heightmap.GetRasterBand(1).WriteArray(heightmapArray)
+heightmap.GetRasterBand(1).SetNoDataValue(translate.GetRasterBand(1).GetNoDataValue())
+left, xResolution, i0, top, i1, yResolution = translate.GetGeoTransform()
+heightmap.SetGeoTransform([
+  left - xResolution * printLayout['margin']['width'],
+  xResolution,
+  i0,
+  top - yResolution * printLayout['margin']['height'],
+  i1,
+  yResolution,
+])
+heightmap.SetProjection(translate.GetProjection())
